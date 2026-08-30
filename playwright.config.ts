@@ -50,7 +50,7 @@ export default defineConfig({
 
   use: {
     baseURL: resolveBaseURL(),
-    headless: false,
+    headless: process.env.CI ? true : false,
     screenshot: ATTACH_SCREENSHOTS ? 'only-on-failure' : 'off',
     video: 'on',
     trace: 'on'
