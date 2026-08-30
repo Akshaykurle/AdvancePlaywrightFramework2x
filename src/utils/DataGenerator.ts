@@ -14,6 +14,7 @@
  */
 
 import { faker } from '@faker-js/faker';
+import { envOr } from '@config/env';
 
 export interface Credentials {
     username: string;
@@ -37,7 +38,7 @@ export class DataGenerator {
 
     /** Random username, e.g. "Otilia35". */
     static username(): string {
-        return faker.internet.userName();
+        return faker.internet.username();
     }
 
     /**
@@ -86,6 +87,16 @@ export class DataGenerator {
             firstName: DataGenerator.firstName(),
             lastName: DataGenerator.lastName(),
             postalCode: DataGenerator.postalCode(),
+        };
+    }
+
+    /** Checkout customer, `.env` first, Faker for any field left unset. */
+    static checkoutCustomerFromEnv(): CheckoutCustomer {
+        const generated = DataGenerator.checkoutCustomer();
+        return {
+            firstName: envOr('CHECKOUT_FIRST_NAME', generated.firstName),
+            lastName: envOr('CHECKOUT_LAST_NAME', generated.lastName),
+            postalCode: envOr('CHECKOUT_POSTAL_CODE', generated.postalCode),
         };
     }
 
