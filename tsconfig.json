@@ -1,23 +1,25 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "preserve",
-    "moduleResolution": "bundler",
-    "strict": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "types": ["node"],
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@src/*": ["./src/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@config/*": ["./src/config/*"],
-      "@api/*": ["./src/api/*"],
-      "@fixtures/*": ["./src/fixtures/*"],
-      "@testdata/*": ["./src/testdata/*"],
-      "@ai/*": ["./src/ai/*"]
+      "@api/*": ["src/api/*"],
+      "@config/*": ["src/config/*"],
+      "@fixtures/*": ["src/fixtures/*"],
+      "@pages/*": ["src/pages/*"],
+      "@testdata/*": ["src/testdata/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src/**/*.ts", "playwright.config.ts"]
+  "include": ["src", "playwright.config.ts"],
+  "exclude": ["node_modules"]
 }
