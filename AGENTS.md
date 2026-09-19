@@ -1,64 +1,84 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in this repository.
+Instructions for AI coding agents in **AdvancePlaywrightFramework2x**, a Playwright + TypeScript
+suite driving TTACart plus a restful-booker API suite and an LLM agent layer.
 
-## Project Overview
+Read `.github/copilot-instructions.md` for the framework conventions and `README.md` for the
+architecture. This file carries the one thing that gates a pull request.
 
-**AdvancePlaywright Framework 2x** — a test automation framework built with Playwright + TypeScript following the Page Object Model, custom fixtures, and data-driven testing.
 
-## Project Structure
+## The four gates
 
-```
-src/
-├── api/          # API clients — one class per service/domain
-├── config/       # Environment configuration (reads .env via dotenv)
-├── fixtures/     # Custom Playwright fixtures — extend base test here
-├── pages/        # Page Object Model classes
-├── testdata/     # Test data files: JSON, CSV, XLSX
-├── tests/        # Test specs (*.spec.ts) — Playwright testDir
-└── utils/        # Reusable helpers: logger (winston), readers, validators
-docs/             # Project documentation
-rules/            # Coding standards & guidelines
-```
+Run all four over your diff **before** raising a pull request. They are cheap, and they catch the
+four ways AI-assisted changes usually go wrong in this repo.
 
-## Commands
+| Gate | The question it asks |
+|:-----|:---------------------|
+| **ai-slop** | Was this generated, skimmed, and shipped? |
+| **ponytail** | Does anything else in the run already record this? |
+| **over-engineering** | How many callers does this abstraction have? |
+| **framework-patterns** | Is this still part of *this* framework? |
+
+### 1. ai-slop
+Invented APIs that do not exist. Assertions that cannot fail. `any` or `@ts-ignore` used to mute
+the compiler. Comments restating the code. A new helper duplicating one in `src/utils/`. Exports
+nobody imports. **Documented claims nobody ran.**
+
+### 2. ponytail
+`playwright.config.ts` sets `trace: 'on'` and `video: 'on'`, so the trace already records every
+request, timing and body. A `test.step` or `testInfo.attach` that only surfaces that is duplicate.
+So is a `log.info` restating its own step name, or a `describe` around one test. Report findings
+as `<file>:L<n>: <tag> <what>. <replacement>.` and end with `net: -N lines possible.`
+Never cut an assertion, never cut knowledge that cannot be re-derived from the code, and never
+touch test granularity: that is a decision about how failures report.
+
+### 3. over-engineering
+Count the callers, with a command, and paste the number. **One caller is not an abstraction, it is
+a detour. Zero is dead code.** The exception is a seam something outside your control requires
+(`hasApiKey()` has one caller because `CustomReporter` demands that exact function). A type used
+only in its own file should lose its `export`, not be deleted.
+
+### 4. framework-patterns
+- Specs import `@fixtures/test-base` (or `@fixtures/booker.fixture`), **never `@playwright/test`**.
+- No locators in specs. They belong in `src/pages/*.ts` as `private readonly` fields.
+- Page objects extend `BasePage` with `super(page, 'ClassName')` and act through `this.el.*`.
+- **Spec filenames need a dot: `*.spec.ts`.** An underscore before `spec` is silently never collected.
+- **A new test directory needs its project decided when it is created.** `chromium` (`src/tests`,
+  ignoring `apisTests` and `aiTest`), `api` (`src/tests/apisTests`), `ai` (`src/tests/aiTest`).
+- Env through `@config/env`. Credentials from `@config/credentials`. Never commit a key.
+- `ajv` + `ajv-formats` for schemas, `jsonpath-plus` for JSON. Zod is not a dependency.
+- Path aliases `@api @config @fixtures @pages @testdata @utils` over relative imports.
+- **No test may pass or fail on model output**, and the suite must stay green with no API key.
+- No em dashes in any documentation.
+
+## Evidence is the whole point
+
+**A gate that cannot cite a command it ran has not run.** "Looks fine" is not a verdict.
 
 ```bash
-npm install                  # Install dependencies
-npx playwright install       # Install browsers
-npx playwright test          # Run all tests (headless)
-npx playwright test --headed # Run in headed mode
-npx playwright show-report   # Open HTML report
-npx playwright test --debug  # Debug with Playwright Inspector
+npm run verify                              # typecheck, lint, full suite
+npx playwright test --project=<p> --list    # proves a new spec is actually collected
+git diff main...HEAD                        # the change under review
 ```
 
-## Code Conventions
+Report `PASS` or `FAIL` per gate with the grep, the counts or the line numbers behind it. Never
+weaken a gate to make a diff pass; fix the gate in its own commit and say so.
 
-- **TypeScript strict mode** is enabled (`tsconfig.json`). No `any` unless unavoidable.
-- **Page Object Model**: never call selectors directly inside test files. Add locators/actions to page classes in `src/pages/` and call them from tests.
-- **Fixtures over globals**: share state (pages, API clients, logged-in contexts) through custom fixtures in `src/fixtures/`, not global variables.
-- **Test naming**: `*.spec.ts`, descriptive titles, group with `test.describe`.
-- **Imports**: use the `@src/*` path alias configured in `tsconfig.json` (`paths`) when importing across folders.
-- **No comments** unless explaining non-obvious logic.
+Full detail for each gate lives in `.claude/skills/gate-*/SKILL.md`, which every agent listed here
+can read as plain markdown.
 
-## Test Data
+## Per-agent locations
 
-- Store static payloads in `src/testdata/` as JSON.
-- Use `@faker-js/faker` for dynamic data instead of hardcoding values.
-- Parse CSV with `csv-parse`; parse Excel with `xlsx` (SheetJS, installed from cdn.sheetjs.com — do not switch to the npm `xlsx` package).
-- Validate API responses against JSON schemas with `ajv` + `ajv-formats`.
+The same rules are mirrored where each tool looks for them. They are generated from
+`docs/quality-gates.md`; edit that and regenerate rather than editing a copy.
 
-## Environment & Secrets
-
-- All environment-specific values come from `.env` (loaded via `dotenv`). Never commit `.env` or hardcode credentials/URLs in code.
-- Access env vars through `src/config/` wrappers, not `process.env` scattered across tests.
-
-## Reporting & Logs
-
-- HTML report: default Playwright reporter. Allure available via `allure-playwright`.
-- Use the winston logger from `src/utils/` instead of `console.log`.
-
-## Git Rules
-
-- Do not commit unless explicitly asked.
-- Never commit secrets, tokens, or `.env`.
+| Agent | Reads |
+|:------|:------|
+| Claude Code | `.claude/skills/quality-gate/` and `.claude/skills/gate-*/` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Cursor | `.cursor/rules/quality-gates.mdc` |
+| Windsurf | `.windsurf/rules/quality-gates.md` |
+| Kiro | `.kiro/steering/quality-gates.md` |
+| Cline | `.clinerules/quality-gates.md` |
+| OpenCode | `.opencode/command/quality-gate.md` |
+| Devin and others | this file, and `.agents/rules/quality-gates.md` |

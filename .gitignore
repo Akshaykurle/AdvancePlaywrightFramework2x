@@ -1,18 +1,22 @@
+
 # Playwright
 node_modules/
+.env
+.env.*
+!.env.example
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
 
-# Environment variables
-.env
+# Framework artifacts
+/logs/
+/reports/
+/tta-report/
 
-# Allure
-/allure-results/
-/allure-report/
+# Claude Code local machine settings (permissions granted on this machine only)
+.claude/settings.local.json
 
-# Misc
-/dist/
-*.log
+# macOS
+.DS_Store
