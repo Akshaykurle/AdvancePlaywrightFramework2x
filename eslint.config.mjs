@@ -33,7 +33,30 @@ export default tseslint.config(
     js.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
 
+    // CommonJS sources (cucumber.js, src/cucumber/support/ttaFormatter.cjs).
+    // js.configs.recommended cannot know the Node module globals, so without
+    // these `require`/`module`/`__dirname` are reported as undefined. Scoped to
+    // .js/.cjs only; the .mjs config files are ESM. They are not part of the
+    // tsconfig program, so type-aware checking is disabled for them too.
     {
+        files: ['**/*.{js,cjs}'],
+        extends: [tseslint.configs.disableTypeChecked],
+        languageOptions: {
+            globals: {
+                require: 'readonly',
+                module: 'readonly',
+                process: 'readonly',
+                __dirname: 'readonly',
+            },
+        },
+        rules: {
+            // These files are CommonJS by design, so require() is the import.
+            '@typescript-eslint/no-require-imports': 'off',
+        },
+    },
+
+    {
+        files: ['**/*.{ts,mts,cts}'],
         languageOptions: {
             parserOptions: {
                 projectService: true,
