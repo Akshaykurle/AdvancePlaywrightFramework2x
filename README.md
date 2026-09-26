@@ -1149,11 +1149,12 @@ Already in `devDependencies`. On a fresh clone:
 npm install
 ```
 
-To add it to another project from scratch:
+To add it to another project from scratch, including the cucumber CommonJS layer:
 
 ```bash
 npm install --save-dev eslint typescript-eslint eslint-plugin-playwright @eslint/js
 npm install --save-dev typescript          # declare it explicitly, see the note below
+npm install --save-dev @cucumber/cucumber cross-env ts-node tsconfig-paths  # only if you copy src/cucumber/
 ```
 
 ### Commands
@@ -1169,13 +1170,29 @@ npm install --save-dev typescript          # declare it explicitly, see the note
 
 ### Config shape
 
+The two-layer shape: type-aware rules for TypeScript, a plain CommonJS layer for
+`cucumber.js` and `src/cucumber/support/ttaFormatter.cjs` (which are `require()`-based and are
+not part of the `tsconfig.json` program, so type-aware rules cannot see them).
+
 ```js
 // eslint.config.mjs
 export default tseslint.config(
-    { ignores: ['node_modules/**', 'tta-report/**', 'reports/**', '.claude/**', /* ... */] },
+    { ignores: ['node_modules/**', 'reports/**', 'tta-report/**', '.claude/**', /* ... */] },
     js.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
     {
+        // .js / .cjs files are CommonJS by design. They get the Node module globals
+        // (js.configs.recommended does not know require/module/__dirname) and NO
+        // type-aware rules, because they are outside the tsconfig program.
+        files: ['**/*.{js,cjs}'],
+        extends: [tseslint.configs.disableTypeChecked],
+        languageOptions: {
+            globals: { require: 'readonly', module: 'readonly', process: 'readonly', __dirname: 'readonly' },
+        },
+        rules: { '@typescript-eslint/no-require-imports': 'off' },
+    },
+    {
+        files: ['**/*.{ts,mts,cts}'],
         languageOptions: {
             parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
         },
@@ -1190,7 +1207,11 @@ export default tseslint.config(
     {
         files: ['src/tests/**/*.spec.ts'],
         ...playwright.configs['flat/recommended'],
-        rules: { 'playwright/no-focused-test': 'error' },         // a stray test.only skips the file
+        rules: { 'playwright/no-focused-test': 'error', 'playwright/no-skipped-test': 'off' },
+    },
+    {
+        files: ['*.config.ts', '*.config.mjs', 'eslint.config.mjs'],
+        ...tseslint.configs.disableTypeChecked,                   // config files run in Node
     },
 );
 ```
@@ -1203,7 +1224,7 @@ blocking a build over, because the real contract check is the Ajv schema at
 [Level 05](#05---json-schema-validation-ajv), which validates the whole response body at run time.
 They stay at `warn` so the count remains visible instead of quietly growing.
 
-Current state: **0 errors, 47 warnings.**
+Current state: **0 errors, 53 warnings** (all warnings are intentional, see above).
 
 ### TypeScript is now a declared dependency
 
