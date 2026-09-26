@@ -65,20 +65,23 @@ Report `PASS` or `FAIL` per gate with the grep, the counts or the line numbers b
 weaken a gate to make a diff pass; fix the gate in its own commit and say so.
 
 Full detail for each gate lives in `.claude/skills/gate-*/SKILL.md`, which every agent listed here
-can read as plain markdown.
+can read as plain markdown. Each tool also loads its own five thin skills (`quality-gate` plus the
+four `gate-*`) from its own skills directory; those thin skill cards carry the same gate bodies
+and can be edited in place without touching the canonical detail.
 
 ## Per-agent locations
 
 The same rules are mirrored where each tool looks for them. They are generated from
 `docs/quality-gates.md`; edit that and regenerate rather than editing a copy.
 
-| Agent | Reads |
-|:------|:------|
-| Claude Code | `.claude/skills/quality-gate/` and `.claude/skills/gate-*/` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Cursor | `.cursor/rules/quality-gates.mdc` |
-| Windsurf | `.windsurf/rules/quality-gates.md` |
-| Kiro | `.kiro/steering/quality-gates.md` |
-| Cline | `.clinerules/quality-gates.md` |
-| OpenCode | `.opencode/command/quality-gate.md` |
-| Devin and others | this file, and `.agents/rules/quality-gates.md` |
+| Agent | Gate skills (loaded before a PR) | Rules mirror |
+|:------|:--------------------|:-------------|
+| Claude Code | `.claude/skills/quality-gate/` and `.claude/skills/gate-*/` | canonical detail |
+| GitHub Copilot | `.github/skills/quality-gate/` and `.github/skills/gate-*/` | `.github/copilot-instructions.md` |
+| Cursor | `.cursor/skills/quality-gate/` and `.cursor/skills/gate-*/` | `.cursor/rules/quality-gates.mdc` |
+| Windsurf | `.windsurf/skills/quality-gate/` and `.windsurf/skills/gate-*/` | `.windsurf/rules/quality-gates.md` |
+| Kiro | `.kiro/skills/quality-gate/` and `.kiro/skills/gate-*/` | `.kiro/steering/quality-gates.md` |
+| Cline | uses the rules mirror | `.clinerules/quality-gates.md` |
+| OpenCode | `.opencode/skills/quality-gate/` and `.opencode/skills/gate-*/` | `.opencode/command/quality-gate.md` |
+| Devin | `.devin/skills/quality-gate/` and `.devin/skills/gate-*/` | this file, `.agents/rules/quality-gates.md` |
+| OpenAI Codex | `.codex/skills/quality-gate/` and `.codex/skills/gate-*/` | `.agents/rules/quality-gates.md` |

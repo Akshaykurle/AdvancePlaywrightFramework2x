@@ -62,3 +62,25 @@ weaken a gate to make a diff pass; fix the gate in its own commit and say so.
 
 Full detail for each gate lives in `.claude/skills/gate-*/SKILL.md`, which every agent listed here
 can read as plain markdown.
+
+## Where the gates run from
+
+Repo-local rule mirrors under `AGENTS.md` -> "Per-agent locations" point each tool at its rules
+file. Beyond the mirrors, every major agent also loads the four gates and the master skill from
+its own skills directory, so the gates fire when the tool starts a task or raises a PR:
+
+| Agent | Gate skills directory |
+|:------|:----------------------|
+| Claude Code | `.claude/skills/` |
+| GitHub Copilot | `.github/skills/` |
+| Cursor | `.cursor/skills/` |
+| Windsurf | `.windsurf/skills/` |
+| Kiro | `.kiro/skills/` |
+| OpenCode | `.opencode/skills/` |
+| Devin | `.devin/skills/` |
+| OpenAI Codex | `.codex/skills/` |
+
+Each directory holds `quality-gate/SKILL.md` (the master, which runs all four) and the four
+`gate-*` cards. The cards are thin: canonical detail lives once in `.claude/skills/gate-*` and the
+cards reference it. Regenerate mirrored copies from the canonical set, never edit one copy and
+leave the rest stale.
